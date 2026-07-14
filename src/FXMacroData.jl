@@ -60,7 +60,7 @@ function Client(
     api_key::Union{Nothing,AbstractString}=nothing,
     base_url::AbstractString=DEFAULT_BASE_URL,
     timeout_seconds::Integer=DEFAULT_TIMEOUT_SECONDS,
-    request::Function=HTTP.get,
+    request::Function=HTTP.get
 )
     isempty(strip(base_url)) && throw(ArgumentError("base_url must not be empty"))
     timeout_seconds > 0 || throw(ArgumentError("timeout_seconds must be positive"))
@@ -100,7 +100,7 @@ end
 function _params(
     client::Client,
     params::AbstractDict{String,<:Any},
-    include_api_key::Bool,
+    include_api_key::Bool
 )
     normalized = Dict{String,Any}(key => value for (key, value) in params if value !== nothing)
     if include_api_key && client.api_key !== nothing
@@ -114,7 +114,7 @@ function get_json(
     client::Client,
     path::AbstractString;
     params::AbstractDict{String,<:Any}=Dict{String,Any}(),
-    include_api_key::Bool=true,
+    include_api_key::Bool=true
 )
     url = _url(client, path, _params(client, params, include_api_key))
     response = client.request(
@@ -161,7 +161,7 @@ function announcements(
     end_date=nothing,
     limit::Integer=100,
     offset::Integer=0,
-    revisions::AbstractString="latest",
+    revisions::AbstractString="latest"
 )
     1 <= limit <= 100 || throw(ArgumentError("limit must be between 1 and 100"))
     offset >= 0 || throw(ArgumentError("offset must be non-negative"))
@@ -184,7 +184,7 @@ function release_calendar(
     currency::AbstractString;
     indicator=nothing,
     start_date=nothing,
-    end_date=nothing,
+    end_date=nothing
 )
     return get_data(
         client,
@@ -203,7 +203,7 @@ function forex(
     base::AbstractString,
     quote::AbstractString;
     start_date=nothing,
-    end_date=nothing,
+    end_date=nothing
 )
     return get_data(
         client,
