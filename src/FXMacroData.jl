@@ -65,7 +65,7 @@ function Client(
     isempty(strip(base_url)) && throw(ArgumentError("base_url must not be empty"))
     timeout_seconds > 0 || throw(ArgumentError("timeout_seconds must be positive"))
     return Client(
-        rstrip(String(base_url), '/'),
+        String(rstrip(String(base_url), '/')),
         resolve_api_key(api_key),
         Int(timeout_seconds),
         request,
