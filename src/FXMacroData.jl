@@ -201,13 +201,13 @@ end
 function forex(
     client::Client,
     base::AbstractString,
-    quote::AbstractString;
+    quote_currency::AbstractString;
     start_date=nothing,
     end_date=nothing
 )
     return get_data(
         client,
-        "/v1/forex/" * lowercase(base) * "/" * lowercase(quote);
+        "/v1/forex/" * lowercase(base) * "/" * lowercase(quote_currency);
         params=Dict(
             "start_date" => start_date === nothing ? nothing : _date_text(start_date),
             "end_date" => end_date === nothing ? nothing : _date_text(end_date),
