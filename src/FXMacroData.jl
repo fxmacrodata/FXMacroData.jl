@@ -34,11 +34,11 @@ function Base.showerror(io::IO, error::APIError)
 end
 
 """A small REST client with optional query-parameter API-key authentication."""
-struct Client
+struct Client{F}
     base_url::String
     api_key::Union{Nothing,String}
     timeout_seconds::Int
-    request::Function
+    request::F
 end
 
 """Return an explicit key or the first non-empty supported environment variable."""
@@ -60,7 +60,7 @@ function Client(
     api_key::Union{Nothing,AbstractString}=nothing,
     base_url::AbstractString=DEFAULT_BASE_URL,
     timeout_seconds::Integer=DEFAULT_TIMEOUT_SECONDS,
-    request::Function=HTTP.get
+    request=HTTP.get
 )
     isempty(strip(base_url)) && throw(ArgumentError("base_url must not be empty"))
     timeout_seconds > 0 || throw(ArgumentError("timeout_seconds must be positive"))
