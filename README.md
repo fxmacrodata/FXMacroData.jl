@@ -5,12 +5,10 @@ intended for research, release-aware backtests, and event-driven systems such
 as Fastback.jl; it does not place trades, modify accounts, or bundle any
 Fastback source code.
 
-## Status
+## Install
 
 FXMacroData.jl is distributed directly from GitHub and is not published to the
-Julia General registry.
-
-## Install after publication
+Julia General registry, so install it by URL:
 
 ```julia
 using Pkg
@@ -35,10 +33,22 @@ inflation = announcements(
 calendar = release_calendar(client, "USD")
 ```
 
-`Client()` reads `FXMACRODATA_API_KEY` and `FXMD_API_KEY` from the environment.
-The key is sent only as the API's `api_key` query parameter. USD public data
-can be queried without a key within the API's public-history window; protected
-currencies and extended history need a key.
+## Authentication
+
+`Client()` reads `FXMACRODATA_API_KEY` then `FXMD_API_KEY` from the environment,
+or takes an explicit `api_key=`.
+
+The key is sent as an `X-API-Key` request header. That is deliberate: a key in
+the query string is recorded by every proxy, CDN and server access log along the
+request path, and leaks through `Referer` headers. If something between you and
+the API cannot forward the header, opt in explicitly:
+
+```julia
+client = Client(auth_mode=:query)
+```
+
+USD data can be queried without a key within the API's public-history window;
+other currencies and extended history need one.
 
 ## Release-aware research
 

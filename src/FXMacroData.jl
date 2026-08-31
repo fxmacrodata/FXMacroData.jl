@@ -33,10 +33,17 @@ function Base.showerror(io::IO, error::APIError)
     print(io, "FXMacroData API error ", error.status, ": ", error.detail)
 end
 
-"""A small REST client with optional query-parameter API-key authentication."""
+"""A small REST client for the FXMacroData REST API.
+
+The API key is sent as an `X-API-Key` request header by default. Prefer this:
+a key placed in the query string is recorded by proxies, CDNs and server access
+logs along the whole request path. Pass `auth_mode=:query` only when something
+between you and the API cannot forward the header.
+"""
 struct Client{F}
     base_url::String
     api_key::Union{Nothing,String}
+    auth_mode::Symbol
     timeout_seconds::Int
     request::F
 end
@@ -59,14 +66,18 @@ function Client(
     ;
     api_key::Union{Nothing,AbstractString}=nothing,
     base_url::AbstractString=DEFAULT_BASE_URL,
+    auth_mode::Symbol=:header,
     timeout_seconds::Integer=DEFAULT_TIMEOUT_SECONDS,
     request=HTTP.get
 )
     isempty(strip(base_url)) && throw(ArgumentError("base_url must not be empty"))
     timeout_seconds > 0 || throw(ArgumentError("timeout_seconds must be positive"))
+    auth_mode in (:header, :query) ||
+        throw(ArgumentError("auth_mode must be :header or :query, got :" * String(auth_mode)))
     return Client(
         String(rstrip(String(base_url), '/')),
         resolve_api_key(api_key),
+        auth_mode,
         Int(timeout_seconds),
         request,
     )
@@ -103,10 +114,17 @@ function _params(
     include_api_key::Bool
 )
     normalized = Dict{String,Any}(key => value for (key, value) in params if value !== nothing)
-    if include_api_key && client.api_key !== nothing
+    if include_api_key && client.api_key !== nothing && client.auth_mode === :query
         normalized["api_key"] = client.api_key
     end
     return normalized
+end
+
+function _headers(client::Client, include_api_key::Bool)
+    if include_api_key && client.api_key !== nothing && client.auth_mode === :header
+        return ["X-API-Key" => client.api_key]
+    end
+    return Pair{String,String}[]
 end
 
 """Return the decoded JSON object for an API path."""
@@ -119,6 +137,7 @@ function get_json(
     url = _url(client, path, _params(client, params, include_api_key))
     response = client.request(
         url;
+        headers=_headers(client, include_api_key),
         status_exception=false,
         retry=false,
         readtimeout=client.timeout_seconds,

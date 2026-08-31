@@ -9,10 +9,14 @@ end
 
 mutable struct FakeRequest
     urls::Vector{String}
+    headers::Vector{Any}
 end
 
-function (request::FakeRequest)(url; kwargs...)
+FakeRequest(urls::Vector{String}) = FakeRequest(urls, Any[])
+
+function (request::FakeRequest)(url; headers=Pair{String,String}[], kwargs...)
     push!(request.urls, url)
+    push!(request.headers, headers)
     return FakeResponse(200, Vector{UInt8}(codeunits("{\"data\":[{\"date\":\"2025-01-01\",\"val\":1.5}]}")))
 end
 
@@ -31,12 +35,30 @@ end
 
     @test rows[1]["val"] == 1.5
     @test occursin("/v1/announcements/usd/inflation?", request.urls[1])
-    @test occursin("api_key=key%20with%20spaces", request.urls[1])
     @test occursin("revisions=all", request.urls[1])
+
+    # The key travels in the header, never the URL: query strings are logged by
+    # every proxy, CDN and access log between the caller and the API.
+    @test !occursin("api_key", request.urls[1])
+    @test ("X-API-Key" => "key with spaces") in request.headers[1]
 
     health(client)
     @test endswith(request.urls[2], "/v1/health")
     @test !occursin("api_key", request.urls[2])
+    @test isempty(request.headers[2])
+end
+
+@testset "query auth mode remains available" begin
+    request = FakeRequest(String[])
+    client = Client(api_key="key with spaces", auth_mode=:query, request=request)
+
+    announcements(client, "USD", "inflation")
+    @test occursin("api_key=key%20with%20spaces", request.urls[1])
+    @test isempty(request.headers[1])
+end
+
+@testset "auth_mode is validated" begin
+    @test_throws ArgumentError Client(api_key="k", auth_mode=:bearer)
 end
 
 @testset "API errors" begin
