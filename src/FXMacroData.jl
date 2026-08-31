@@ -19,7 +19,7 @@ export APIError,
        resolve_api_key,
        ping
 
-const DEFAULT_BASE_URL = "https://fxmacrodata.com/api"
+const DEFAULT_BASE_URL = "https://api.fxmacrodata.com"
 const DEFAULT_TIMEOUT_SECONDS = 30
 const API_KEY_ENV_VARS = ("FXMACRODATA_API_KEY", "FXMD_API_KEY")
 

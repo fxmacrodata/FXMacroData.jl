@@ -2,6 +2,9 @@
 
 ## 0.2.0
 
+- The default base URL is now `https://api.fxmacrodata.com`, the canonical host
+  (`fxmacrodata.com/api` was an undocumented alias). Pass `base_url=` to override.
+
 - **API keys are now sent as an `X-API-Key` header instead of an `api_key` query
   parameter.** A key in the query string is recorded by every proxy, CDN and
   server access log along the request path, and can leak through `Referer`
